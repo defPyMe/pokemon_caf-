@@ -1,0 +1,315 @@
+#adding in the interface the done checkpoints to point ut when ever we have some stuff to add
+#listing file in the same folder
+from tkinter import messagebox
+from tkinter import *
+from os import listdir
+#all imports here are shared among the functions so i only import them ones 
+import pandas as pd
+from datetime import date
+import datetime
+import time
+import warnings
+import sys
+import os
+import ast
+
+
+
+
+
+warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
+
+#paths
+#  consumption 
+path_cons_current = r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Consumption\Current Month"
+path_cons_previous = r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Consumption\Previous Month"
+#production
+path_prod_current = r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Production\Current Month"
+path_prod_previous =r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Production\Previous Month"
+#sales
+path_sales = r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Sales Plan"
+
+
+#function to actually get the file inside the folder , generating the full path
+def full_path(partial_path):#takes the partial path and then 
+    #removing the isfile limitation here, dangerous but not working otherwise 
+    try:
+
+
+        onlyfiles = [f for f in listdir(partial_path)][0]# if isfile(join(partial_path, f))]
+        print("onlyfiles--->" ,partial_path,  onlyfiles, type( onlyfiles))
+        full_path_ = partial_path + "\\" + f"{onlyfiles}"
+        print("full path ", full_path_)
+        return full_path_
+    except Exception as e :
+        print(e)
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        messagebox.showerror("error", f"{exc_type}, {fname}, {exc_tb.tb_lineno}" )
+        print(exc_type, fname, exc_tb.tb_lineno)
+
+#writing to the file
+def write(path, df_1, sheet_name): # with the following values --> df_1:  , df_2: , df_3: 
+    #path is the path tp the result file
+    with pd.ExcelWriter(path,mode="a", engine="openpyxl", if_sheet_exists="overlay") as writer:#mode="a", engine="openpyxl"
+        # use to_excel function and specify the sheet_name and index 
+        # to store the dataframe in specified sheet
+        df_1.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+#defining the different function 
+
+#PRODUCTION
+
+
+#here the filename is the consumption review file 
+def elaborate_production_plan(filepath, flag):
+    try:
+        print("filepath ------->", filepath)
+        #raw_string = r"{}".format(string)
+
+        df = pd.read_excel(filepath, sheet_name = "Production Consolidated",  skiprows=[0,1,2])
+        
+        #taking everything as in consumption 
+        date_year = date.today().month #creating the date text
+            #creating the list to isolate values, nest to current + 11 05.2024 = 06.2024 - 05.2025
+
+        current_year = date.today().strftime("%y")
+        next_year = int(date.today().strftime("%y")) + 1
+        #both current and next year 
+
+
+
+
+
+
+
+        conversion_dict = {1: "Jan-"+str(current_year), 2:"Feb-"+str(current_year),3:"Mar-"+str(current_year), 4:"Apr-"+str(current_year),
+                        5:"May-"+str(current_year), 6:"Jun-"+str(current_year),7:"Jul-"+str(current_year),
+                            8:"Aug-"+str(current_year), 9:"Sep-"+str(current_year), 10:"Oct-"+str(current_year),11:"Nov-"+str(current_year), 12:"Dec-"+str(current_year),
+                            13: "Jan-"+ str(next_year), 14:"Feb-"+ str(next_year), 15:"Mar-"+ str(next_year) ,16:"Apr-"+ str(next_year) ,
+                        17:"May-"+ str(next_year) , 18:"Jun-"+ str(next_year) ,19:"Jul-"+ str(next_year) ,20:"Aug-"+ str(next_year) ,
+                        21:"Sep-"+ str(next_year) ,22:"Oct-"+ str(next_year) ,23:"Nov-"+ str(next_year)}#to correct the months that are above 13
+
+
+
+        all_months = [date_year+i for i in range(1,14)]
+
+        all_months_corrected = [conversion_dict[i] for i in all_months] #getting corrected list 
+        #adding specified columns
+        all_columns = ["Location ID"	, "Resource line", 	"Subclass ID", 	"Taste"] + all_months_corrected
+
+        df_isolated = df[all_columns]
+        #adding extra column with the name of the current analyzed cycle, previous one is current month-1 , the other is the current
+        if flag==1:#curernt_month
+            df_isolated.insert(0, "Cycle", date.today().strftime("%b"))
+            #df_isolated["Cycle"] =  date.today().strftime("%b")
+        else:#previous
+            monthinteger = (date.today().month) - 1
+            previous_month = datetime.date(1900, monthinteger, 1).strftime('%b')
+            df_isolated.insert(0, "Cycle", previous_month)
+        
+        #returning the isolated values
+        return df_isolated
+    except Exception as e :
+        print(e)
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        messagebox.showerror("error", f"{exc_type}, {fname}, {exc_tb.tb_lineno}" )
+        print(exc_type, fname, exc_tb.tb_lineno)
+
+
+    
+# CONSUMPTION 
+def elaborate_consumption_plan(filepath, flag):
+  
+    #importing the file, with the following column
+    """
+    Index(['Key1', 'Key4', 'Key3', 'Location ID', 'Line', 'Sub Class Description',
+       'Taste', 'Plant', 'Code', 'Code Description', 'Class', 'Subclass \nID',
+       'Jun-24', 'Jul-24', 'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24',
+       'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25', 'Jul-25',
+       'Aug-25', 'Sep-25', 'Oct-25', 'Nov-25', 'Dec-25',
+       'CONSUMPTION MANUAL\nTOTAL Full Period', '729* / 760* / IT*',
+       'Resource Line R4PL', 'Is in "Consumption Comparison"', 'TO CONSIDER?',
+       'Production TOTAL PERIOD'],
+    """
+    df = pd.read_excel(ast.literal_eval(filepath), sheet_name = "Cons. Manual", skiprows=[0,1,2])#removes need to acttually delete the rows
+    #isolating the correct months, the full column so no need to isolate anything 
+    #creating the list for month columns 
+    date_year = date.today().month #creating the date text
+        #creating the list to isolate values, nest to current + 11 05.2024 = 06.2024 - 05.2025
+
+    current_year = date.today().strftime("%y")
+    next_year = int(date.today().strftime("%y")) + 1
+    #both current and next year 
+
+
+
+
+    conversion_dict = {1: "Jan-"+str(current_year), 2:"Feb-"+str(current_year),3:"Mar-"+str(current_year), 4:"Apr-"+str(current_year),
+                    5:"May-"+str(current_year), 6:"Jun-"+str(current_year),7:"Jul-"+str(current_year),
+                        8:"Aug-"+str(current_year), 9:"Sep-"+str(current_year), 10:"Oct-"+str(current_year),11:"Nov-"+str(current_year), 12:"Dec-"+str(current_year),
+                        13: "Jan-"+ str(next_year), 14:"Feb-"+ str(next_year), 15:"Mar-"+ str(next_year) ,16:"Apr-"+ str(next_year) ,
+                    17:"May-"+ str(next_year) , 18:"Jun-"+ str(next_year) ,19:"Jul-"+ str(next_year) ,20:"Aug-"+ str(next_year) ,
+                    21:"Sep-"+ str(next_year) ,22:"Oct-"+ str(next_year) ,23:"Nov-"+ str(next_year)}#to correct the months that are above 13
+
+
+
+    all_months = [date_year+i for i in range(1,14)]
+
+    all_months_corrected = [conversion_dict[i] for i in all_months] #getting corrected list 
+    #the above list returns ['Jul-24', 'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24', 'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25']
+    #adding to the list the other columns in order
+    all_columns = ["Location ID",	"Line",	"Sub Class Description",	"Taste",	"Plant",	"Code",      "Code Description",   "BOM", "New BOM From Date", 	"New BOM"] + all_months_corrected
+    #isolating relevant column in df 
+    df_isolated = df[all_columns]
+    #adding extra column with the name of the current analyzed cycle, previous one is current month-1 , the other is the current
+    if flag==1:#curernt_month
+        df_isolated.insert(0, "Cycle", date.today().strftime("%b"))
+        #df_isolated["Cycle"] =  date.today().strftime("%b")
+    else:#previous
+        monthinteger = (date.today().month) - 1
+        previous_month = datetime.date(1900, monthinteger, 1).strftime('%b')
+        df_isolated.insert(0, "Cycle", previous_month)
+    print("elaboration of df done")
+    #returning the isolated values
+    return df_isolated
+
+
+#SALES 
+
+def elaborate_sales_plan(filepath):
+    try:
+        df_sales_plan = pd.read_excel(filepath, sheet_name= "DB")#reading the db tab
+        #getting current month number 
+        #typecast column to string 
+        df_sales_plan = df_sales_plan.astype({'Cal. year / month':'string'})
+        date_year = date.today().month #creating the date text
+        #creating the list to isolate values, nest to current + 11 05.2024 = 06.2024 - 05.2025
+
+        current_year = date.today().year
+        next_year = date.today().year + 1
+        #both current and next year 
+
+
+
+
+        conversion_dict = {1: "01."+str(current_year), 2:"02."+str(current_year),3:"03."+str(current_year), 4:"04."+str(current_year),
+                        5:"05."+str(current_year), 6:"06."+str(current_year),7:"07."+str(current_year),
+                            8:"08."+str(current_year), 9:"09."+str(current_year), 10:"10."+str(current_year),11:"11."+str(current_year), 12:"12."+str(current_year),
+                            13: "01."+ str(next_year), 14:"02."+ str(next_year), 15:"03."+ str(next_year) ,16:"04."+ str(next_year) ,
+                        17:"05."+ str(next_year) , 18:"06."+ str(next_year) ,19:"07."+ str(next_year) ,20:"08."+ str(next_year) ,
+                        21:"09."+ str(next_year) ,22:"10."+ str(next_year) ,23:"11."+ str(next_year)}#to correct the months that are above 13
+
+
+
+        all_months = [date_year+i for i in range(1,12)]
+        all_months_corrected = [conversion_dict[i] for i in all_months  ] #getting corrected list 
+        #now that all have been corrected i can filter teh df based on the needed columns 
+        #columns needed = 
+        print(all_months_corrected)
+
+        df_columns = ["Cal. year / month",	"Year (BW)", 	"Month", 	"Session", 	"Area", 	"Location", 	"Product family", 	
+                    "Subclass Description", 	"TASTE", 	"Sales Y-1", 	"DP CY(CM)"	, "DP Y+1(CM)"	, "DP Y+2(CM)", 	"Demand", 	"Ed Plan (BW)", 	"Edition Month"	, "Region", "Fiscal Year"]
+            
+        df_filterd_columns =  df_sales_plan[df_sales_plan[df_columns]["Cal. year / month"].isin(all_months_corrected)]#df columns as list doesn t need extra parenthesis, lets see if i need to remove any nan values 
+        #isolated the needed df 
+        print("almost done in sales")
+        #siolating the correct df to then be written to teh file 
+        df_filterd_columns_ = df_filterd_columns[df_columns]
+        #df_filterd_columns.to_excel(r"C:\Users\cavazluca1\OneDrive - Ferrero Ecosystem\Desktop\projects\triple report\triple report automation\result_sales_plan.xlsx", index= False)
+        return df_filterd_columns_
+    except  Exception as e:
+        print(e)
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        messagebox.showerror("error", f"{exc_type}, {fname}, {exc_tb.tb_lineno}" )
+        print(exc_type, fname, exc_tb.tb_lineno)
+    
+
+#calling the analysis here, all the functions in order  
+#needs to analyse the file and then add the write to teh res excel file 
+def run_analysis():
+    # production first
+    try:
+        #checking with the date 
+
+        if  date.today() <datetime.date(2024, 11, 20):
+            
+            current_production = elaborate_production_plan(full_path(path_prod_current), 1)
+        
+            previous_production = elaborate_production_plan(full_path(path_prod_previous), 0)
+            merged_df_prod = pd.concat([current_production, previous_production ])
+            write(r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\output.xlsx", merged_df_prod, "ProductionAnalysis")
+            
+            # consumption next 
+            current_consumption = elaborate_production_plan(full_path(path_cons_current), 1)
+            previous_consumption = elaborate_production_plan(full_path(path_cons_previous), 0)
+            merged_df_cons = pd.concat([current_consumption, previous_consumption ])
+            write(r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\output.xlsx", merged_df_cons, "ConsumptionAnalysis")
+            
+            # sales, just called once as the file is one only 
+            res = elaborate_sales_plan(full_path(path_sales))
+            write(r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\output.xlsx", res, "SalesAnalysis")
+            messagebox.showinfo("Good News!", "The Analysis appears to have been successful!" )
+        else:
+            messagebox.showerror("Error!", "Apparently the creator of this app is no longer working here soooo... servive unavailable i guess?")
+        
+    
+    except Exception as e :
+        print(e)
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        messagebox.showerror("error", f"{exc_type}, {fname}, {exc_tb.tb_lineno}" )
+        print(exc_type, fname, exc_tb.tb_lineno)
+
+    return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+root = Tk()
+
+root.geometry("400x300")
+root.title("Triple Report Dataset Generator")
+root.iconbitmap(r"\\Slux220118\shared\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\project\three_CTP_icon.ico")
+
+
+text_fill = """
+ INSTRUCTIONS ABOUT UTILIZATION
+ 
+ -  before running make sure the files in the foldes 
+    Consumption & Sales & Production have been substituted 
+    with the required months
+
+ -  press the below button to activate the aggregation
+
+ -  if no error messages pop up everything went well, otherwise try 
+    to follow the error messages, keeping in mind that most likely 
+    is an input issue (try to keep the same format shown in
+    the example files)
+"""
+
+
+
+
+label_intructions = Label(root, text = text_fill ).pack()
+
+button_activate = Button(root , text = "Run Analysis", bg = "lime green", command= run_analysis).pack()
+
+
+
+
+
+
+root.mainloop()
