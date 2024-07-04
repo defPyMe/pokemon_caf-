@@ -21,13 +21,13 @@ warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 #paths
 #  consumption 
-path_cons_current = r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Consumption\Current Month"
-path_cons_previous = r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Consumption\Previous Month"
+path_cons_current = r""
+path_cons_previous = r""
 #production
-path_prod_current = r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Production\Current Month"
-path_prod_previous =r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Production\Previous Month"
+path_prod_current = r""
+path_prod_previous =r""
 #sales
-path_sales = r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\Sales Plan"
+path_sales = r""
 
 
 #function to actually get the file inside the folder , generating the full path
@@ -218,7 +218,7 @@ def elaborate_sales_plan(filepath):
         print("almost done in sales")
         #siolating the correct df to then be written to teh file 
         df_filterd_columns_ = df_filterd_columns[df_columns]
-        #df_filterd_columns.to_excel(r"C:\Users\cavazluca1\OneDrive - Ferrero Ecosystem\Desktop\projects\triple report\triple report automation\result_sales_plan.xlsx", index= False)
+        #df_filterd_columns.to_excel(r"", index= False)
         return df_filterd_columns_
     except  Exception as e:
         print(e)
@@ -241,20 +241,20 @@ def run_analysis():
         
             previous_production = elaborate_production_plan(full_path(path_prod_previous), 0)
             merged_df_prod = pd.concat([current_production, previous_production ])
-            write(r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\output.xlsx", merged_df_prod, "ProductionAnalysis")
+            write(r"", merged_df_prod, "ProductionAnalysis")
             
             # consumption next 
             current_consumption = elaborate_production_plan(full_path(path_cons_current), 1)
             previous_consumption = elaborate_production_plan(full_path(path_cons_previous), 0)
             merged_df_cons = pd.concat([current_consumption, previous_consumption ])
-            write(r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\output.xlsx", merged_df_cons, "ConsumptionAnalysis")
+            write(r"", merged_df_cons, "ConsumptionAnalysis")
             
             # sales, just called once as the file is one only 
             res = elaborate_sales_plan(full_path(path_sales))
-            write(r"R:\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\output.xlsx", res, "SalesAnalysis")
+            write(r"", res, "SalesAnalysis")
             messagebox.showinfo("Good News!", "The Analysis appears to have been successful!" )
         else:
-            messagebox.showerror("Error!", "Apparently the creator of this app is no longer working here soooo... servive unavailable i guess?")
+            pass
         
     
     except Exception as e :
@@ -282,7 +282,7 @@ root = Tk()
 
 root.geometry("400x300")
 root.title("Triple Report Dataset Generator")
-root.iconbitmap(r"\\Slux220118\shared\Central_Supply_Planning\Central_Material_Management\01. Pre S&OP - Raw Materials Consumptions\__ VOLUMES EXTRACTION AND TEMPLATES\01. Triple Report\triple_report_automation\project\three_CTP_icon.ico")
+root.iconbitmap(r"")
 
 
 text_fill = """
